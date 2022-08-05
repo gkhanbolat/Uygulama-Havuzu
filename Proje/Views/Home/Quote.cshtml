@@ -1,0 +1,165 @@
+﻿
+@{
+    ViewData["Title"] = "Quote";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Quote</title>
+    <style>
+        body {
+            background-color: green;
+        }
+
+        .title {
+            margin: 1em 0 1.5em 0;
+            text-shadow: 5px 3px 0px #333333;
+            font-size: 3em;
+            color: #fff;
+        }
+
+        p#quote, p#author {
+            color: #286090;
+        }
+
+        .row {
+            margin: 0 -15px 0;
+        }
+
+        .quote-block {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px 10px 10px 10px;
+            border: 2px solid black;
+        }
+
+        #quote-box {
+            padding: 0 0 10px 0;
+        }
+
+        #newquote {
+            margin: 2% 0 0;
+        }
+
+        p#author {
+            text-align: right;
+        }
+
+        .container {
+            max-width: 750px;
+            min-width: 300px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container text-center">
+        <div class="row">
+            <h2 class="title">Random Quotes App</h2>
+        </div>
+        <div class="row quote-block">
+            <div class="col-sm-12 col-sm-offset-3">
+                <div id="quote-box">
+
+                    <p id="quote">
+                        There is nothing in a caterpillar that tells you it's going to be a butterfly.
+                    </p>
+                    <p id="author">~ Buckminster Fuller</p>
+                </div>
+                <div>
+                    <div>
+                        <a href="#" class="btn btn-outline-primary" id="tweet" src="#">Tweet It!</a>
+                    </div>
+                    <div>
+                        <a class="btn btn-outline-primary" type="submit" id="newquote" onclick="getQuote()">
+                            New Quote
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
+
+<script src="https://platform.twitter.com/widgets.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        getQuote();
+    });
+
+    function getQuote() {
+
+        $('.new-quote-btn').blur();
+        hideData();
+
+        $.ajax({
+            url: 'https://type.fit/api/quotes',
+            jsonp: 'jsonp',
+            dataType: 'jsonp',
+            data: {
+                method: 'getQuote',
+                lang: 'en',
+                format: 'jsonp',
+            },
+        })
+            .done(function (data) {
+                var quoteText = data.quoteText.trim(),
+                    quoteAuthor = '~' + (data.quoteAuthor.trim() || 'Anonymous'),
+                    quoteMachineUrl = 'https://type.fit/api/quotes',
+                    tweetText = encodeURIComponent(quoteText + ' ' + quoteAuthor),
+                    tweetUrl = 'https://twitter.com/intent/tweet?text=' + tweetText;
+                bgColor = ["green"];
+                colorId = Math.floor(Math.random() * bgColor.length);
+                document.body.style.backgroundColor = bgColor[colorId];
+                $('p#quote, p#author, #tweet, #newquote').css('color', bgColor[colorId])
+
+                if ((quoteText.length + quoteAuthor.length + 27) > 140) {
+                    getQuote();
+                    return;
+                }
+
+                $('#quote').text(quoteText);
+                $('#author').text(quoteAuthor);
+                $('#tweet').attr('href', tweetUrl);
+
+                showData();
+            })
+            .fail(function (err) {
+
+                if (window.location.protocol !== 'http:') {
+                    $('#quote').html('Error: Please visit this page over http:// to get quotes. https:// is not supported at this time.')
+                } else {
+                    $('#quote').html('Error: ' + err.status + ' (' + err.statusText + ')' +
+                        '. Click the button to generate another quote.');
+                }
+                $('#author').html('~ Random Quote Machine');
+                showData();
+            });
+    }
+
+    function hideData() {
+        $('#share-icons').css('display', 'none');
+        $('#spinner').css('display', 'block');
+        $('#quote-text').css('display', 'none');
+    }
+
+    function showData() {
+        $('#spinner').css('display', 'none');
+        $('#quote-text').css('display', 'block');
+        $('#share-icons').css('display', 'block');
+    }
+
+</script>
